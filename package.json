@@ -16,7 +16,7 @@
     "linter",
     "setup"
   ],
-  "author": "Your Name",
+  "author": "PerchikKirill",
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.2",
