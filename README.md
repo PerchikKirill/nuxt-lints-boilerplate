@@ -54,21 +54,6 @@ npx create-nuxt-linter-config
    npx create-nuxt-linter-config
    ```
 
-## Рекомендуемые скрипты для package.json
-
-После установки рекомендуется добавить следующие скрипты в ваш `package.json`:
-
-```json
-{
-  "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "lint:style": "stylelint **/*.{css,scss,vue}",
-    "lint:style:fix": "stylelint **/*.{css,scss,vue} --fix"
-  }
-}
-```
-
 ## Требования
 
 - Node.js 14.0.0+
