@@ -45,14 +45,10 @@ npx git@github.com:PerchikKirill/nuxt-lints-boilerplate.git
 1. Перейдите в корень вашего Nuxt проекта
 2. Запустите команду:
    ```bash
-   npx create-nuxt-linter-config
+   npx git@github.com:PerchikKirill/nuxt-lints-boilerplate.git
    ```
 
 ## Требования
 
-- Node.js 14.0.0+
+- Node.js 18.0.0+
 - Nuxt проект
-
-## Лицензия
-
-MIT
