@@ -700,7 +700,61 @@ function updateNuxtConfig() {
     }
 }
 
-// Основная функция
+// Обновление скриптов в package.json
+function updatePackageScripts() {
+    try {
+        const packageJsonPath = 'package.json';
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+        // Базовые скрипты
+        const baseScripts = {
+            'lint:fix': 'eslint ./src --fix',
+            'lint:style:fix': 'stylelint "src/**/*.{css,scss,vue}" --cache --fix'
+        };
+
+        // Проверяем наличие папки layers
+        const hasLayers = fs.existsSync('layers');
+
+        // Скрипты для layers
+        const layersScripts = {
+            'lint:layers:fix': 'eslint ./layers --fix',
+            'lint:layers:style:fix': 'stylelint "layers/**/*.{css,scss,vue}" --cache --fix'
+        };
+
+        // Инициализируем scripts если их нет
+        if (!packageJson.scripts) {
+            packageJson.scripts = {};
+        }
+
+        // Добавляем базовые скрипты
+        Object.assign(packageJson.scripts, baseScripts);
+
+        // Добавляем скрипты для layers если папка существует
+        if (hasLayers) {
+            Object.assign(packageJson.scripts, layersScripts);
+            console.log(chalk.blue('📁 Обнаружена папка layers - добавлены дополнительные скрипты'));
+        }
+
+        // Сохраняем обновленный package.json
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+        console.log(chalk.green('✅ Обновлены скрипты в package.json'));
+
+        // Показываем добавленные скрипты
+        console.log(chalk.blue('📝 Добавленные скрипты:'));
+        Object.entries(baseScripts).forEach(([key, value]) => {
+            console.log(chalk.blue(`   "${key}": "${value}"`));
+        });
+
+        if (hasLayers) {
+            Object.entries(layersScripts).forEach(([key, value]) => {
+                console.log(chalk.blue(`   "${key}": "${value}"`));
+            });
+        }
+
+    } catch (error) {
+        console.error(chalk.red('❌ Ошибка при обновлении скриптов:'), error.message);
+    }
+}
 async function main() {
     console.log(chalk.blue.bold('🚀 Настройка ESLint и Stylelint для Nuxt проекта'));
     console.log('');
@@ -727,6 +781,7 @@ async function main() {
     createStylelintConfig();
     createEslintConfig();
     updateNuxtConfig();
+    updatePackageScripts();
 
     console.log('');
     console.log(chalk.green.bold('🎉 Настройка завершена успешно!'));
@@ -737,12 +792,16 @@ async function main() {
     console.log(chalk.blue('   • Создан файл .stylelintrc.json'));
     console.log(chalk.blue('   • Создан файл eslint.config.mjs'));
     console.log(chalk.blue('   • Обновлен nuxt.config (добавлен @nuxt/eslint)'));
+    console.log(chalk.blue('   • Добавлены скрипты в package.json'));
     console.log('');
-    console.log(chalk.yellow('💡 Рекомендуется добавить в package.json скрипты:'));
-    console.log(chalk.yellow('   "lint": "eslint .",'));
-    console.log(chalk.yellow('   "lint:fix": "eslint . --fix",'));
-    console.log(chalk.yellow('   "lint:style": "stylelint **/*.{css,scss,vue}",'));
-    console.log(chalk.yellow('   "lint:style:fix": "stylelint **/*.{css,scss,vue} --fix"'));
+    console.log(chalk.yellow('💡 Для запуска линтеров используйте:'));
+    console.log(chalk.yellow('   npm run lint:fix - исправить код'));
+    console.log(chalk.yellow('   npm run lint:style:fix - исправить стили'));
+
+    if (fs.existsSync('layers')) {
+        console.log(chalk.yellow('   npm run lint:layers:fix - исправить код в layers'));
+        console.log(chalk.yellow('   npm run lint:layers:style:fix - исправить стили в layers'));
+    }
 }
 
 // Запуск
