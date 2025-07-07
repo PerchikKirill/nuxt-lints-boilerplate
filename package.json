@@ -1,0 +1,29 @@
+{
+  "name": "create-nuxt-linter-config",
+  "version": "1.0.0",
+  "description": "Автоматическая настройка ESLint и Stylelint для Nuxt проектов",
+  "main": "index.js",
+  "bin": {
+    "create-nuxt-linter-config": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nuxt",
+    "eslint",
+    "stylelint",
+    "linter",
+    "setup"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "fs-extra": "^11.1.1",
+    "inquirer": "^8.2.6"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
