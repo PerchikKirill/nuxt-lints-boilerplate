@@ -1,4 +1,4 @@
-# Create Nuxt Linter Config
+# nuxt-lints-boilerplate
 
 Инструмент для автоматической настройки ESLint и Stylelint в Nuxt проектах.
 
