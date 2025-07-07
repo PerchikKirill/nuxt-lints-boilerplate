@@ -124,9 +124,9 @@ function updateNuxtConfig() {
             if (modules) {
                 // Убираем лишние запятые в конце и пробелы
                 const cleanModules = modules.replace(/,\s*$/, '');
-                newModules = `${cleanModules},\n    '@nuxt/eslint'`;
+                newModules = `${cleanModules},\n    '@nuxt/eslint',`;
             } else {
-                newModules = `'@nuxt/eslint'`;
+                newModules = `'@nuxt/eslint',`;
             }
 
             content = content.replace(moduleRegex, `modules: [\n    ${newModules}\n  ]`);
@@ -138,8 +138,8 @@ function updateNuxtConfig() {
             if (exportMatch) {
                 const configContent = exportMatch[1].trim();
                 const newConfigContent = configContent ?
-                    `${configContent},\n  modules: [\n    '@nuxt/eslint'\n  ]` :
-                    `modules: [\n    '@nuxt/eslint'\n  ]`;
+                    `${configContent},\n  modules: [\n    '@nuxt/eslint',\n  ]` :
+                    `modules: [\n    '@nuxt/eslint',\n  ]`;
 
                 content = content.replace(exportRegex,
                     `export default defineNuxtConfig({\n  ${newConfigContent}\n})`

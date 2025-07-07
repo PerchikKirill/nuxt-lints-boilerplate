@@ -5,13 +5,7 @@
 ## Установка
 
 ```bash
-npm install -g create-nuxt-linter-config
-```
-
-Или используйте npx для одноразового использования:
-
-```bash
-npx create-nuxt-linter-config
+npx git@github.com:PerchikKirill/nuxt-lints-boilerplate.git
 ```
 
 ## Что делает инструмент
