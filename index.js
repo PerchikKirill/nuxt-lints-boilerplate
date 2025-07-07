@@ -664,9 +664,15 @@ function updateNuxtConfig() {
 
         if (match) {
             const modules = match[1].trim();
-            const newModules = modules ?
-                `${modules},\n    '@nuxt/eslint'` :
-                `'@nuxt/eslint'`;
+            let newModules;
+
+            if (modules) {
+                // Убираем лишние запятые в конце и пробелы
+                const cleanModules = modules.replace(/,\s*$/, '');
+                newModules = `${cleanModules},\n    '@nuxt/eslint'`;
+            } else {
+                newModules = `'@nuxt/eslint'`;
+            }
 
             content = content.replace(moduleRegex, `modules: [\n    ${newModules}\n  ]`);
         } else {
