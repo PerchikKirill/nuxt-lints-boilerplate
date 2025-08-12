@@ -171,12 +171,6 @@ function updatePackageScripts() {
             'lint:style:fix': `stylelint "${sourceDir}/**/*.{css,scss,vue}" --cache --fix`
         };
 
-        // Базовые скрипты
-        const baseScripts = {
-            'lint:fix': 'eslint ./src --fix',
-            'lint:style:fix': 'stylelint "src/**/*.{css,scss,vue}" --cache --fix'
-        };
-
         // Проверяем наличие папки layers
         const hasLayers = fs.existsSync('layers');
 
@@ -258,8 +252,8 @@ async function main() {
     console.log(chalk.blue('   • Добавлены скрипты в package.json'));
     console.log('');
     console.log(chalk.yellow('💡 Для запуска линтеров используйте:'));
-    console.log(chalk.yellow('   npm run lint:fix - исправить код'));
-    console.log(chalk.yellow('   npm run lint:style:fix - исправить стили'));
+    console.log(chalk.yellow(`   npm run lint:fix - исправить код в ${sourceDir}`));
+    console.log(chalk.yellow(`   npm run lint:style:fix - исправить стили в ${sourceDir}`));
 
     if (fs.existsSync('layers')) {
         console.log(chalk.yellow('   npm run lint:layers:fix - исправить код в layers'));
