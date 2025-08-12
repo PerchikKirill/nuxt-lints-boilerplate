@@ -156,14 +156,10 @@ function updateNuxtConfig() {
 }
 
 // Обновление скриптов в package.json
-function updatePackageScripts() {
+function updatePackageScripts(sourceDir) {
     try {
         const packageJsonPath = 'package.json';
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-
-        // Определяем основную папку (src или app)
-        const sourceDir = fs.existsSync('app') ? 'app' : 'src';
-        console.log(chalk.blue(`📁 Основная папка проекта: ${sourceDir}`));
 
         // Базовые скрипты
         const baseScripts = {
@@ -232,6 +228,10 @@ async function main() {
         process.exit(1);
     }
 
+    // Определяем основную папку (src или app)
+    const sourceDir = fs.existsSync('app') ? 'app' : 'src';
+    console.log(chalk.blue(`📁 Основная папка проекта: ${sourceDir}`));
+
     // Определяем пакетный менеджер
     const packageManager = detectPackageManager();
     console.log(chalk.blue(`📋 Обнаружен пакетный менеджер: ${packageManager}`));
@@ -240,7 +240,7 @@ async function main() {
     installDependencies(packageManager);
     copyTemplateFiles();
     updateNuxtConfig();
-    updatePackageScripts();
+    updatePackageScripts(sourceDir);
 
     console.log('');
     console.log(chalk.green.bold('🎉 Настройка завершена успешно!'));
