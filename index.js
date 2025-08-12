@@ -161,6 +161,16 @@ function updatePackageScripts() {
         const packageJsonPath = 'package.json';
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
+        // Определяем основную папку (src или app)
+        const sourceDir = fs.existsSync('app') ? 'app' : 'src';
+        console.log(chalk.blue(`📁 Основная папка проекта: ${sourceDir}`));
+
+        // Базовые скрипты
+        const baseScripts = {
+            'lint:fix': `eslint ./${sourceDir} --fix`,
+            'lint:style:fix': `stylelint "${sourceDir}/**/*.{css,scss,vue}" --cache --fix`
+        };
+
         // Базовые скрипты
         const baseScripts = {
             'lint:fix': 'eslint ./src --fix',
