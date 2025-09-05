@@ -18,7 +18,8 @@ const devDependencies = [
     'stylelint-order',
     '@nuxt/eslint',
     '@nuxt/eslint-config',
-    'eslint'
+    'eslint',
+    'typescript'
 ];
 
 // Определяем пакетный менеджер
