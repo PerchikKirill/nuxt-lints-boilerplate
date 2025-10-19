@@ -11,6 +11,9 @@
     "stylelint-config-rational-order-fix/plugin"
   ],
   "rules": {
+    "custom-property-pattern": null,
+    "declaration-property-value-keyword-no-deprecated": null,
+    "nesting-selector-no-missing-scoping-root": null,
     "order/properties-order": [],
     "order/order": [
       "custom-properties",
@@ -70,6 +73,14 @@
       {
         "ignoreAtRules": [
           "tailwind"
+          "apply",
+          "variants",
+          "responsive",
+          "screen",
+          "layer",
+          "utility",
+          "custom-variant",
+          "theme"
         ]
       }
     ]
