@@ -4,6 +4,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const { execSync } = require('child_process');
 const chalk = require('chalk');
+const readline = require('readline');
 
 // Пакеты для установки
 const devDependencies = [
@@ -22,6 +23,59 @@ const devDependencies = [
     'typescript'
 ];
 
+// Пакеты, которые могут конфликтовать
+const conflictingPackages = {
+    eslint: [
+        'eslint-config-prettier',
+        'eslint-plugin-prettier',
+        '@typescript-eslint/eslint-plugin',
+        '@typescript-eslint/parser',
+        'eslint-config-airbnb',
+        'eslint-config-standard',
+        'eslint-plugin-vue',
+        'eslint-plugin-import',
+        'eslint-plugin-node',
+        'eslint-plugin-promise'
+    ],
+    stylelint: [
+        'stylelint-config-prettier',
+        'stylelint-prettier'
+    ],
+    prettier: [
+        'prettier',
+        'eslint-config-prettier',
+        'eslint-plugin-prettier',
+        'stylelint-config-prettier',
+        'stylelint-prettier'
+    ]
+};
+
+// Конфигурационные файлы prettier
+const prettierFiles = [
+    '.prettierrc',
+    '.prettierrc.json',
+    '.prettierrc.js',
+    '.prettierrc.cjs',
+    '.prettierrc.mjs',
+    '.prettierrc.yml',
+    '.prettierrc.yaml',
+    'prettier.config.js',
+    'prettier.config.cjs',
+    'prettier.config.mjs',
+    '.prettierignore'
+];
+
+// Создаем интерфейс для ввода
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+// Утилита для вопросов
+function question(query) {
+    return new Promise(resolve => rl.question(query, resolve));
+}
+
 // Определяем пакетный менеджер
 function detectPackageManager() {
     if (fs.existsSync('yarn.lock')) {
@@ -35,9 +89,155 @@ function detectPackageManager() {
     }
 }
 
+// Проверка наличия пакетов в проекте
+function checkInstalledPackages() {
+    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    const allDeps = {
+        ...packageJson.dependencies,
+        ...packageJson.devDependencies
+    };
+
+    const found = {
+        eslint: [],
+        stylelint: [],
+        prettier: []
+    };
+
+    // Проверяем eslint пакеты
+    if (allDeps.eslint) {
+        found.eslint.push('eslint');
+        conflictingPackages.eslint.forEach(pkg => {
+            if (allDeps[pkg]) found.eslint.push(pkg);
+        });
+    }
+
+    // Проверяем stylelint пакеты
+    if (allDeps.stylelint) {
+        found.stylelint.push('stylelint');
+        conflictingPackages.stylelint.forEach(pkg => {
+            if (allDeps[pkg]) found.stylelint.push(pkg);
+        });
+    }
+
+    // Проверяем prettier
+    conflictingPackages.prettier.forEach(pkg => {
+        if (allDeps[pkg]) found.prettier.push(pkg);
+    });
+
+    return found;
+}
+
+// Удаление пакетов
+function removePackages(packages, packageManager) {
+    if (packages.length === 0) return;
+
+    console.log(chalk.blue(`🗑️  Удаление пакетов: ${packages.join(', ')}`));
+
+    const packageList = packages.join(' ');
+
+    try {
+        switch (packageManager) {
+            case 'yarn':
+                execSync(`yarn remove ${packageList}`, { stdio: 'inherit' });
+                break;
+            case 'pnpm':
+                execSync(`pnpm remove ${packageList}`, { stdio: 'inherit' });
+                break;
+            case 'bun':
+                execSync(`bun remove ${packageList}`, { stdio: 'inherit' });
+                break;
+            default:
+                execSync(`npm uninstall ${packageList}`, { stdio: 'inherit' });
+        }
+        console.log(chalk.green('✅ Пакеты успешно удалены!'));
+    } catch (error) {
+        console.error(chalk.red('❌ Ошибка при удалении пакетов:'), error.message);
+    }
+}
+
+// Удаление конфигурационных файлов prettier
+function removePrettierConfigs() {
+    let removed = [];
+    prettierFiles.forEach(file => {
+        if (fs.existsSync(file)) {
+            try {
+                fs.unlinkSync(file);
+                removed.push(file);
+            } catch (error) {
+                console.error(chalk.red(`❌ Не удалось удалить ${file}:`), error.message);
+            }
+        }
+    });
+
+    if (removed.length > 0) {
+        console.log(chalk.green(`✅ Удалены файлы Prettier: ${removed.join(', ')}`));
+    }
+
+    // Также проверяем package.json на наличие prettier конфигурации
+    try {
+        const packageJsonPath = 'package.json';
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        
+        if (packageJson.prettier) {
+            delete packageJson.prettier;
+            fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+            console.log(chalk.green('✅ Удалена конфигурация Prettier из package.json'));
+        }
+    } catch (error) {
+        console.error(chalk.red('❌ Ошибка при очистке package.json:'), error.message);
+    }
+}
+
+// Обработка конфликтующих пакетов
+async function handleConflictingPackages(installedPackages, packageManager) {
+    let packagesToRemove = [];
+
+    // Проверяем ESLint
+    if (installedPackages.eslint.length > 0) {
+        console.log(chalk.yellow('\n⚠️  Обнаружены существующие пакеты ESLint:'));
+        installedPackages.eslint.forEach(pkg => console.log(chalk.yellow(`   • ${pkg}`)));
+        
+        const answer = await question(chalk.cyan('Удалить их и установить новые? (y/n): '));
+        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+            packagesToRemove.push(...installedPackages.eslint);
+        }
+    }
+
+    // Проверяем Stylelint
+    if (installedPackages.stylelint.length > 0) {
+        console.log(chalk.yellow('\n⚠️  Обнаружены существующие пакеты Stylelint:'));
+        installedPackages.stylelint.forEach(pkg => console.log(chalk.yellow(`   • ${pkg}`)));
+        
+        const answer = await question(chalk.cyan('Удалить их и установить новые? (y/n): '));
+        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+            packagesToRemove.push(...installedPackages.stylelint);
+        }
+    }
+
+    // Проверяем Prettier
+    if (installedPackages.prettier.length > 0) {
+        console.log(chalk.yellow('\n⚠️  Обнаружен Prettier:'));
+        installedPackages.prettier.forEach(pkg => console.log(chalk.yellow(`   • ${pkg}`)));
+        console.log(chalk.yellow('   Prettier может конфликтовать с настройками линтеров.'));
+        
+        const answer = await question(chalk.cyan('Удалить Prettier и его конфигурацию? (y/n): '));
+        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+            packagesToRemove.push(...installedPackages.prettier);
+            removePrettierConfigs();
+        }
+    }
+
+    // Удаляем выбранные пакеты
+    if (packagesToRemove.length > 0) {
+        // Убираем дубликаты
+        packagesToRemove = [...new Set(packagesToRemove)];
+        removePackages(packagesToRemove, packageManager);
+    }
+}
+
 // Установка зависимостей
 function installDependencies(packageManager) {
-    console.log(chalk.blue('📦 Установка зависимостей...'));
+    console.log(chalk.blue('\n📦 Установка зависимостей...'));
 
     const packageList = devDependencies.join(' ');
 
@@ -64,6 +264,8 @@ function installDependencies(packageManager) {
 
 // Копирование файлов шаблонов
 function copyTemplateFiles() {
+    console.log(chalk.blue('\n📝 Обновление конфигурационных файлов...'));
+    
     const templateDir = path.join(__dirname, 'templates');
     const files = [
         { from: '.stylelintignore', to: '.stylelintignore' },
@@ -78,7 +280,7 @@ function copyTemplateFiles() {
         try {
             if (fs.existsSync(sourcePath)) {
                 fs.copyFileSync(sourcePath, targetPath);
-                console.log(chalk.green(`✅ Создан файл ${file.to}`));
+                console.log(chalk.green(`✅ Обновлен файл ${file.to}`));
             } else {
                 console.log(chalk.yellow(`⚠️  Шаблон ${file.from} не найден`));
             }
@@ -214,7 +416,16 @@ function updatePackageScripts(sourceDir) {
 
 // Основная функция
 async function main() {
+    // Проверяем флаги
+    const args = process.argv.slice(2);
+    const configsOnly = args.includes('-configs') || args.includes('--configs');
+
     console.log(chalk.blue.bold('🚀 Настройка ESLint и Stylelint для Nuxt проекта'));
+    
+    if (configsOnly) {
+        console.log(chalk.cyan('⚙️  Режим: обновление только конфигурационных файлов'));
+    }
+    
     console.log('');
 
     // Проверяем, что мы в Nuxt проекте
@@ -233,9 +444,24 @@ async function main() {
     const sourceDir = fs.existsSync('app') ? 'app' : 'src';
     console.log(chalk.blue(`📁 Основная папка проекта: ${sourceDir}`));
 
+    // Если режим только конфигов - копируем файлы и выходим
+    if (configsOnly) {
+        copyTemplateFiles();
+        console.log('');
+        console.log(chalk.green.bold('🎉 Конфигурационные файлы успешно обновлены!'));
+        rl.close();
+        return;
+    }
+
     // Определяем пакетный менеджер
     const packageManager = detectPackageManager();
     console.log(chalk.blue(`📋 Обнаружен пакетный менеджер: ${packageManager}`));
+
+    // Проверяем существующие пакеты
+    const installedPackages = checkInstalledPackages();
+    
+    // Обрабатываем конфликтующие пакеты
+    await handleConflictingPackages(installedPackages, packageManager);
 
     // Выполняем установку и настройку
     installDependencies(packageManager);
@@ -260,7 +486,13 @@ async function main() {
         console.log(chalk.yellow('   npm run lint:layers:fix - исправить код в layers'));
         console.log(chalk.yellow('   npm run lint:layers:style:fix - исправить стили в layers'));
     }
+
+    rl.close();
 }
 
 // Запуск
-main().catch(console.error);
+main().catch(error => {
+    console.error(error);
+    rl.close();
+    process.exit(1);
+});
